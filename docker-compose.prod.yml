@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  app:
+    image: melosasen/notification-system:latest
+    container_name: notification_app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mongodb
+      - rabbitmq
+    environment:
+      - MONGODB_URL=mongodb://mongodb:27017
+      - MONGODB_DB=notification_db
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - RABBITMQ_QUEUE_NAME=notifications
+      - APP_ENV=production
+      - DEBUG=false
+      - LOG_LEVEL=INFO
+    networks:
+      - notification-network
+    restart: unless-stopped
+
+  mongodb:
+    image: mongo:latest
+    container_name: notification_mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - notification-network
+    restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: notification_rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    networks:
+      - notification-network
+    restart: unless-stopped
+
+volumes:
+  mongodb_data:
+  rabbitmq_data:
+
+networks:
+  notification-network:
+    driver: bridge

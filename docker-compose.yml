@@ -1,0 +1,45 @@
+services:
+  app:
+    build: .
+    container_name: notification_app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mongodb
+      - rabbitmq
+    environment:
+      - MONGODB_URL=mongodb://mongodb:27017
+      - MONGODB_DB=notification_service
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - RABBITMQ_QUEUE_NAME=notifications
+    networks:
+      - notification_network
+  mongodb:
+    image: mongo:latest
+    container_name: notification_mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - notification_network
+    restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: notification_rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - notification_network
+    restart: unless-stopped
+
+volumes:
+  mongodb_data:
+  rabbitmq_data: 
+networks:
+  notification_network:
+    driver: bridge
